@@ -23,6 +23,7 @@ import com.example.messengerapp.ui.SingleChatScreen
 import com.example.messengerapp.ui.SingleStatusScreen
 import com.example.messengerapp.ui.StatusListScreen
 import com.example.messengerapp.ui.theme.MessengerAppTheme
+import dagger.hilt.android.AndroidEntryPoint
 
 
 sealed class DestinationScreen(val route: String) {
@@ -41,7 +42,7 @@ sealed class DestinationScreen(val route: String) {
 
 }
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
