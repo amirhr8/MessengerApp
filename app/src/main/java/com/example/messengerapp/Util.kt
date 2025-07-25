@@ -30,7 +30,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImagePainter
 import coil.compose.ImagePainter
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 
 fun navigateTo(navController: NavController, route: String) {
@@ -68,7 +70,7 @@ fun CheckSignedIn(vm: CAViewModel, navController: NavController) {
     val signedIn = vm.signedIn.value
     if (signedIn && !alreadyLoggedIn.value) {
         alreadyLoggedIn.value = true
-        navController.navigate(DestinationScreen.statusList.route) {
+        navController.navigate(DestinationScreen.StatusList.route) {
             popUpTo(0)
         }
     }
@@ -91,15 +93,18 @@ fun CommonImage(
     modifier: Modifier = Modifier.wrapContentSize(),
     contentScale: ContentScale = ContentScale.Crop
 ) {
-    val painter = rememberImagePainter(data = data)
+    val painter = rememberAsyncImagePainter(model = data)
+
+    if (painter.state is AsyncImagePainter.State.Loading) {
+        CommonProgressSpinner()
+    }
+
     Image(
         painter = painter,
         contentDescription = null,
         modifier = modifier,
         contentScale = contentScale
     )
-    if (painter.state is ImagePainter.State.Loading)
-        CommonProgressSpinner()
 }
 
 @Composable

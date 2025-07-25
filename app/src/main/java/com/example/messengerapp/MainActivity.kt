@@ -3,15 +3,12 @@ package com.example.messengerapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -20,11 +17,10 @@ import com.example.messengerapp.ui.LoginScreen
 import com.example.messengerapp.ui.ProfileScreen
 import com.example.messengerapp.ui.SignupScreen
 import com.example.messengerapp.ui.SingleChatScreen
-import com.example.messengerapp.ui.SingleStatusScreen
 import com.example.messengerapp.ui.StatusListScreen
+import com.example.messengerapp.ui.StatusScreen
 import com.example.messengerapp.ui.theme.MessengerAppTheme
 import dagger.hilt.android.AndroidEntryPoint
-
 
 sealed class DestinationScreen(val route: String) {
     object Signup : DestinationScreen("signup")
@@ -35,22 +31,24 @@ sealed class DestinationScreen(val route: String) {
         fun createRoute(id: String) = "singleChat/$id"
     }
 
-    object statusList : DestinationScreen("statusList")
-    object singleStatus : DestinationScreen("singleStatus/{statusId}") {
-        fun createRoute(id: String) = "singleStatus/$id"
+    object StatusList : DestinationScreen("statusList")
+    object Status : DestinationScreen("status/{userId}") {
+        fun createRoute(userId: String?) = "status/$userId"
     }
-
 }
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             MessengerAppTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    chatAppNavigation()
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ChatAppNavigation()
                 }
             }
         }
@@ -58,34 +56,39 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun chatAppNavigation() {
+fun ChatAppNavigation() {
     val navController = rememberNavController()
+    val vm = hiltViewModel<CAViewModel>()
 
-    NavHost(
-        navController = navController, startDestination = DestinationScreen.Profile.route
-    ) {
+    NotificationMessage(vm = vm)
+
+    NavHost(navController = navController, startDestination = DestinationScreen.Signup.route) {
         composable(DestinationScreen.Signup.route) {
-            SignupScreen()
+            SignupScreen(navController, vm)
         }
-
+        composable(DestinationScreen.Login.route) {
+            LoginScreen(navController, vm)
+        }
         composable(DestinationScreen.Profile.route) {
-            ProfileScreen(navController = navController)
+            ProfileScreen(navController, vm)
         }
-
-        composable(DestinationScreen.statusList.route) {
-            StatusListScreen(navController = navController)
+        composable(DestinationScreen.StatusList.route) {
+            StatusListScreen(navController, vm)
         }
-
-        composable(DestinationScreen.singleStatus.route) {
-            SingleStatusScreen("123")
-        }
-
         composable(DestinationScreen.ChatList.route) {
-            ChatListScreen(navController = navController)
+            ChatListScreen(navController, vm)
         }
-
         composable(DestinationScreen.SingleChat.route) {
-            SingleChatScreen("123")
+            val chatId = it.arguments?.getString("chatId")
+            chatId?.let {
+                SingleChatScreen(navController = navController, vm = vm, chatId = it)
+            }
+        }
+        composable(DestinationScreen.Status.route) {
+            val userId = it.arguments?.getString("userId")
+            userId?.let {
+                StatusScreen(navController = navController, vm = vm, userId = it)
+            }
         }
     }
 }
